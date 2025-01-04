@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+</head>
+
+<body>
+    <a-scene>
+        <!-- Spieler-Ball -->
+        <a-sphere id="player" position="0 1.5 -3" radius="0.5" color="#FF5733"></a-sphere>
+
+        <!-- Boden -->
+        <a-plane position="0 0 -5" rotation="-90 0 0" width="20" height="20" color="#7BC8A4"></a-plane>
+
+        <!-- Licht -->
+        <a-light type="ambient" color="#FFFFFF"></a-light>
+        <a-light type="directional" position="0 5 -2" intensity="0.5"></a-light>
+
+        <!-- Kamera -->
+        <a-entity camera position="0 10 10" rotation="-45 0 0"></a-entity>
+
+        <script>
+            let isJumping = false; // Verhindert Doppelsprünge
+
+            // Bewegungslogik
+            document.addEventListener("keydown", (event) => {
+                const player = document.querySelector("#player");
+                const position = player.getAttribute("position");
+
+                switch (event.key) {
+                    case "ArrowUp":
+                        position.z -= 0.5; // Vorwärts
+                        break;
+                    case "ArrowDown":
+                        position.z += 0.5; // Rückwärts
+                        break;
+                    case "ArrowLeft":
+                        position.x -= 0.5; // Links
+                        break;
+                    case "ArrowRight":
+                        position.x += 0.5; // Rechts
+                        break;
+                }
+
+                player.setAttribute("position", position);
+            });
+
+            // Sprunglogik
+            document.addEventListener("keydown", (event) => {
+                if (event.key === "Enter" && !isJumping) {
+                    isJumping = true;
+                    const player = document.querySelector("#player");
+                    let position = player.getAttribute("position");
+
+                    // Springen nach oben
+                    position.y += 1.5;
+                    player.setAttribute("position", position);
+
+                    // Nach kurzer Verzögerung wieder nach unten fallen
+                    setTimeout(() => {
+                        position.y -= 1.5;
+                        player.setAttribute("position", position);
+                        isJumping = false;
+                    }, 300); // 300ms in der Luft
+                }
+            });
+        </script>
+    </a-scene>
+</body>
+
+</html>
