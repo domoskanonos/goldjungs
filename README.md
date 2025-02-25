@@ -120,3 +120,8 @@ Die **Heldengruppe** (Leonas, Lars, Paulina, Tom) kann pro Planet unterschiedlic
 - **Tom**: Illusionen und Kreativität, um Fallen oder Gegner zu täuschen.
 
 Diese Welt ist durchwoben von **Grautönen**: Weder die „Guten“ sind ausschließlich heldenhaft, noch die „Bösen“ sind durchweg bösartig. Alle haben ihre Ziele, Träume und Ängste, was vielseitige, spannende Konflikte ermöglicht.
+
+
+# Prompt für Titelbild
+
+16:9 wide, cinematic fantasy illustration with exactly four young adventurers in the foreground, with clearly visible faces and upper bodies, standing in front of a shimmering portal in a mystical forest at twilight. The first character has short, light hair, bright blue eyes, and a calm demeanor, with gentle streams of water and light gusts of wind swirling around their arms. The second character appears bold, with a confident gaze and flickering flames surrounding their hands. The third character stands in a stable karate stance, radiating self-confidence. The fourth character looks shy but attentive, with glowing sparks of illusion magic swirling around their hands. The background features an enchanted forest with glowing plants, softly luminescent mushrooms, and trees with violet-tinged bark. A light mist hovers above the ground, reflecting the magical light. The sky transitions from the warm orange of sunset to deep purple with faint stars beginning to appear. Vibrant colors, cinematic lighting, detailed textures, epic fantasy style. At the top of the image, include the text "Die Goldjungs" in a stylish, readable fantasy font. No additional people or figures in the background.
