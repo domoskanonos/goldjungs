@@ -6,8 +6,8 @@
   <!-- Phaser 3 über CDN -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
   <style>
-    body {
-      margin: 0;
+    body { 
+      margin: 0; 
       overflow: hidden;
     }
     canvas {
@@ -40,17 +40,10 @@
   };
 
   const game = new Phaser.Game(config);
-
-  let player, cursors;
-  let ground;
-  let enemies;
-  let bullets;
-  let lastFired = 0;
-  let lives = 3;
-  let lifeText;
+  let player, cursors, ground, enemies, bullets, lastFired = 0, lives = 3, lifeText;
 
   function preload() {
-    // Lade Platzhalter-Grafiken (ersetze diese URLs durch eigene Assets)
+    // Platzhalter-Grafiken; ersetze diese URLs später durch eigene Assets
     this.load.image('ground', 'https://labs.phaser.io/assets/sprites/platform.png');
     this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-dude.png');
     this.load.image('enemy', 'https://labs.phaser.io/assets/sprites/space-baddie.png');
@@ -58,14 +51,14 @@
   }
 
   function create() {
-    // Erstelle den Boden als statische Plattform, relativ am unteren Rand
+    // Erstelle den Boden als statische Plattform (grüne Wiese)
     ground = this.physics.add.staticGroup();
-    // Platziere den Boden in der Mitte der Breite und bei 95% der Höhe
+    // Positioniere den Boden in der Mitte der Breite und bei 95% der Höhe
     ground.create(gameWidth / 2, gameHeight * 0.95, 'ground')
-          .setScale(2)
+          .setScale(1) // Keine Skalierung, damit Kollisionen stimmen
           .refreshBody();
 
-    // Spieler erstellen an relativer Position (z. B. 10% von links, 67% von oben)
+    // Erstelle den Spieler relativ positioniert (z.B. 10% von links, 67% von oben)
     player = this.physics.add.sprite(gameWidth * 0.1, gameHeight * 0.67, 'player');
     player.setBounce(0.1);
     player.setCollideWorldBounds(true);
@@ -74,17 +67,17 @@
     player.collisionCount = 0;
     this.physics.add.collider(player, ground);
 
-    // Gegner-Gruppe erstellen und Kollision mit Boden aktivieren
+    // Gegner-Gruppe erstellen
     enemies = this.physics.add.group();
     this.physics.add.collider(enemies, ground);
 
     // Starte den ersten Gegner-Spawning-Timer
     spawnNextEnemy.call(this);
 
-    // Bullets-Gruppe erstellen
+    // Erstelle die Gruppe für Bullets
     bullets = this.physics.add.group();
 
-    // Kollisionen zwischen Spieler und Gegner, sowie Bullets und Gegner
+    // Kollisionen: Spieler vs. Gegner und Bullets vs. Gegner
     this.physics.add.overlap(player, enemies, hitEnemy, null, this);
     this.physics.add.overlap(bullets, enemies, bulletHitsEnemy, null, this);
 
@@ -92,7 +85,7 @@
     cursors = this.input.keyboard.createCursorKeys();
     this.input.keyboard.on('keydown-SPACE', shoot, this);
 
-    // Anzeige der Leben oben rechts, relativ positioniert
+    // Anzeige der Leben oben rechts (relativ positioniert)
     lifeText = this.add.text(gameWidth * 0.98, gameHeight * 0.05, 'Leben: ' + player.lives, { font: `${Math.round(gameHeight * 0.05)}px Arial`, fill: '#000' });
     lifeText.setOrigin(1, 0);
 
@@ -113,18 +106,19 @@
       player.setVelocityX(0);
     }
 
-    if (cursors.up.isDown && player.body.touching.down) {
+    // Sprung: Verwende body.blocked.down als Alternative zu touching.down
+    if (cursors.up.isDown && (player.body.blocked.down || player.body.touching.down)) {
       player.setVelocityY(-330);
     }
 
-    // Entferne Gegner, die links aus dem Bild laufen
+    // Entferne Gegner, die aus dem Bildschirm links verschwunden sind
     enemies.getChildren().forEach(enemy => {
       if (enemy.x < -50) {
         enemy.destroy();
       }
     });
 
-    // Entferne Bullets, die außerhalb des Bildschirms sind
+    // Entferne Bullets, die den Bildschirm verlassen
     bullets.getChildren().forEach(bullet => {
       if (bullet.x > gameWidth + 50 || bullet.x < -50) {
         bullet.destroy();
@@ -134,7 +128,7 @@
 
   // Funktion, um den nächsten Gegner mit zufälliger Verzögerung zu spawnen
   function spawnNextEnemy() {
-    let delay = Phaser.Math.Between(2000, 12000); // 2 bis 12 Sekunden
+    let delay = Phaser.Math.Between(2000, 12000); // Verzögerung zwischen 2 und 12 Sekunden
     console.log('Nächster Gegner in ' + delay + ' ms');
     this.time.addEvent({
       delay: delay,
@@ -147,12 +141,10 @@
   // Gegner spawnen relativ zum Bildschirm
   function spawnEnemy() {
     let groundObj = ground.getChildren()[0];
-    // Berechne die Y-Position so, dass der Gegner (mit Origin 0.5, 1) direkt auf dem Boden erscheint
-    let enemyImage = this.textures.get('enemy').getSourceImage();
-    let enemyHeight = enemyImage ? enemyImage.height : 32;
-    let enemyY = groundObj.y; // Da der Boden am unteren Rand liegt
-    // Gegner soll rechts außerhalb des Bildschirms spawnen (z.B. 5% der Bildschirmbreite als Offset)
-    let enemyX = gameWidth + gameWidth * 0.05;
+    // Berechne die Y-Position so, dass der Gegner (mit Origin 0.5, 1) direkt auf dem Boden liegt
+    let enemyY = groundObj.y;
+    // Gegner spawnt rechts außerhalb des Bildschirms
+    let enemyX = gameWidth + 50;
     let enemy = enemies.create(enemyX, enemyY, 'enemy');
     enemy.setOrigin(0.5, 1);
     enemy.setScale(1);
@@ -161,15 +153,14 @@
     enemy.setBounce(0);
     enemy.setDepth(2);
     console.log('Gegner gespawnt an x = ' + enemy.x + ', y = ' + enemy.y);
-    // Starte den Timer für den nächsten Gegner
     spawnNextEnemy.call(this);
   }
 
-  // Funktion, wenn der Spieler von einem Gegner getroffen wird
+  // Wenn der Spieler von einem Gegner getroffen wird
   function hitEnemy(player, enemy) {
     enemy.destroy();
     player.collisionCount++;
-    // Visueller Effekt: Spieler wird verkleinert
+    // Spieler visuell verkleinern
     player.setScale(Math.max(0.5, 1 - player.collisionCount * 0.25));
     if (player.collisionCount >= 2) {
       player.lives--;
@@ -185,7 +176,7 @@
     }
   }
 
-  // Funktion, wenn ein Bullet einen Gegner trifft
+  // Wenn ein Bullet einen Gegner trifft
   function bulletHitsEnemy(bullet, enemy) {
     bullet.destroy();
     enemy.destroy();
