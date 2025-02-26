@@ -59,7 +59,7 @@
     ground = this.physics.add.staticGroup();
     ground.create(400, 425, 'ground').setScale(2).refreshBody();
 
-    // Spieler erstellen
+    // Spieler erstellen (wie gehabt)
     player = this.physics.add.sprite(100, 300, 'player');
     player.setBounce(0.1);
     player.setCollideWorldBounds(true);
@@ -142,19 +142,20 @@
     });
   }
 
-  // Gegner spawnen direkt auf dem Boden
+  // Gegner spawnen direkt auf dem Boden, ähnlich wie der Spieler positioniert wird
   function spawnEnemy() {
-    // Hole den Boden (das erste Objekt der ground-Gruppe)
     let groundObj = ground.getChildren()[0];
-    // Setze den Gegner so, dass sein unterer Rand direkt auf dem Boden liegt
-    let enemyY = groundObj.y;
+    // Berechne den y-Wert so, dass der Gegner (unterer Rand) auf dem Boden liegt
+    let enemyImage = this.textures.get('enemy').getSourceImage();
+    let enemyHeight = enemyImage ? enemyImage.height : 32; // Fallback: 32 Pixel
+    let enemyY = groundObj.y - enemyHeight / 2;
     let enemy = enemies.create(config.width + 50, enemyY, 'enemy');
-    enemy.setOrigin(0.5, 1);
+    enemy.setOrigin(0.5, 0.5); // Setze den Ursprung in die Mitte, damit es ähnlich zum Spieler ist
+    enemy.setScale(1); // explizit skalieren
     enemy.setVelocityX(-Phaser.Math.Between(50, 150));
     enemy.setCollideWorldBounds(false);
     enemy.setBounce(0);
-    // Setze einen höheren Depth, damit der Gegner vor dem Boden gezeichnet wird
-    enemy.setDepth(2);
+    enemy.setDepth(2); // Über dem Boden zeichnen
     console.log('Gegner gespawnt an x = ' + enemy.x + ', y = ' + enemy.y);
     // Starte den Timer für den nächsten Gegner
     spawnNextEnemy.call(this);
