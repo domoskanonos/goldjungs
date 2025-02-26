@@ -2,13 +2,13 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Die Goldjungs – Jump'n'Run</title>
-  <!-- Phaser 3 über CDN laden -->
+  <title>Die Goldjungs – Jump'n'Run mit Gegnern und Schießen</title>
+  <!-- Phaser 3 über CDN -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
   <style>
     body {
       margin: 0;
-      background: #87ceeb; /* Himmelblau */
+      background: #87ceeb;
     }
     canvas {
       display: block;
@@ -18,7 +18,6 @@
 </head>
 <body>
 <script>
-  // Konfiguration des Spiels
   const config = {
     type: Phaser.AUTO,
     width: 800,
@@ -37,44 +36,76 @@
     }
   };
 
-  // Neues Spiel erstellen
   const game = new Phaser.Game(config);
-  let player;
-  let cursors;
+
+  let player, cursors;
   let ground;
-  let titleText;
+  let enemies;
+  let bullets;
+  let lastFired = 0;
+  let lives = 3;
+  let lifeText;
+  let collisionCounter = 0;
 
   function preload() {
-    // Lade Beispiel-Assets (Platzhalterbilder)
-    // Ersetze diese URLs später durch eigene Grafiken für die Goldjungs-Charaktere und Umgebungen.
+    // Platzhalter-Grafiken; ersetze sie durch deine Assets
     this.load.image('ground', 'https://labs.phaser.io/assets/sprites/platform.png');
     this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-dude.png');
+    this.load.image('enemy', 'https://labs.phaser.io/assets/sprites/space-baddie.png');
+    this.load.image('bullet', 'https://labs.phaser.io/assets/sprites/bullets/bullet7.png');
   }
 
   function create() {
-    // Erstelle den Boden als statische Plattform
+    // Boden
     ground = this.physics.add.staticGroup();
-    // Erstelle eine Bodenplattform in der Mitte des Bildschirms
     ground.create(400, 425, 'ground').setScale(2).refreshBody();
 
-    // Erstelle den Spieler (als Platzhalter, später kannst du hier verschiedene Charaktere einbinden)
+    // Spieler erstellen
     player = this.physics.add.sprite(100, 300, 'player');
     player.setBounce(0.1);
     player.setCollideWorldBounds(true);
+    player.setScale(1);
+    // Eigene Variablen: Leben und wie oft der Spieler getroffen wurde
+    player.lives = lives;
+    player.collisionCount = 0;
 
-    // Füge Kollisionsabfrage zwischen Spieler und Boden hinzu
+    // Kollisionsabfrage mit dem Boden
     this.physics.add.collider(player, ground);
 
-    // Eingaben über die Cursor-Tasten
-    cursors = this.input.keyboard.createCursorKeys();
+    // Gegner-Gruppe: Gegner kommen von rechts und bewegen sich nach links
+    enemies = this.physics.add.group();
+    // Erstelle einen Timer, der alle 2 Sekunden einen neuen Gegner spawnt
+    this.time.addEvent({
+      delay: 2000,
+      callback: spawnEnemy,
+      callbackScope: this,
+      loop: true
+    });
 
-    // Füge den Titel oben im Spiel hinzu
-    titleText = this.add.text(400, 50, 'Die Goldjungs', { font: '32px fantasy', fill: '#000' });
-    titleText.setOrigin(0.5);
+    // Schüsse: Erstelle eine Gruppe für Bullets
+    bullets = this.physics.add.group();
+
+    // Kollisionen: Spieler vs. Gegner
+    this.physics.add.overlap(player, enemies, hitEnemy, null, this);
+
+    // Kollisionen: Bullets vs. Gegner
+    this.physics.add.overlap(bullets, enemies, bulletHitsEnemy, null, this);
+
+    // Eingabe
+    cursors = this.input.keyboard.createCursorKeys();
+    this.input.keyboard.on('keydown-SPACE', shoot, this);
+
+    // Anzeige der Leben oben rechts
+    lifeText = this.add.text(750, 20, 'Leben: ' + player.lives, { font: '24px Arial', fill: '#000' });
+    lifeText.setOrigin(1, 0);
+
+    // Überschrift oben
+    const titleText = this.add.text(400, 20, 'Die Goldjungs', { font: '32px fantasy', fill: '#000' });
+    titleText.setOrigin(0.5, 0);
   }
 
-  function update() {
-    // Spielerbewegung: Links und Rechts
+  function update(time, delta) {
+    // Spielerbewegung
     if (cursors.left.isDown) {
       player.setVelocityX(-160);
       player.flipX = true;
@@ -85,10 +116,75 @@
       player.setVelocityX(0);
     }
 
-    // Springen: Nur wenn der Spieler den Boden berührt
-    if (cursors.up.isDown && player.body.touching.down) {
+    if ((cursors.up.isDown || cursors.space.isDown) && player.body.touching.down) {
       player.setVelocityY(-330);
     }
+
+    // Schießen: (Sobald SPACE gedrückt wird, handled shoot-Funktion das Schießen)
+    // Hier werden auch Bullets bewegt, aber Arcade Physics übernimmt das in update
+
+    // Entferne Gegner, die aus dem Bildschirm gelaufen sind
+    enemies.getChildren().forEach(enemy => {
+      if (enemy.x < -50) {
+        enemy.destroy();
+      }
+    });
+
+    // Entferne Bullets, die den Bildschirm verlassen
+    bullets.getChildren().forEach(bullet => {
+      if (bullet.x > config.width + 50 || bullet.x < -50) {
+        bullet.destroy();
+      }
+    });
+  }
+
+  // Funktion zum Spawnen eines Gegners von rechts
+  function spawnEnemy() {
+    const enemyY = Phaser.Math.Between(300, 400); // Zufällige Höhe
+    let enemy = enemies.create(config.width + 50, enemyY, 'enemy');
+    enemy.setVelocityX(-Phaser.Math.Between(50, 150));
+    enemy.setCollideWorldBounds(false);
+  }
+
+  // Funktion, wenn der Spieler von einem Gegner getroffen wird
+  function hitEnemy(player, enemy) {
+    enemy.destroy();
+    player.collisionCount++;
+    // Verkleinere den Spieler als Effekt der Kollision
+    player.setScale(Math.max(0.5, 1 - player.collisionCount * 0.25));
+    if (player.collisionCount >= 2) {
+      player.lives--;
+      lifeText.setText('Leben: ' + player.lives);
+      player.collisionCount = 0;
+      // Setze Spielergröße zurück, falls noch Leben vorhanden sind
+      if (player.lives > 0) {
+        player.setScale(1);
+      } else {
+        // Game Over
+        this.scene.pause();
+        const gameOverText = this.add.text(config.width / 2, config.height / 2, 'Game Over', { font: '48px Arial', fill: '#f00' });
+        gameOverText.setOrigin(0.5);
+      }
+    }
+  }
+
+  // Funktion, wenn ein Bullet einen Gegner trifft
+  function bulletHitsEnemy(bullet, enemy) {
+    bullet.destroy();
+    enemy.destroy();
+  }
+
+  // Funktion zum Schießen
+  function shoot() {
+    // Schieße nur alle 500 ms
+    if (this.time.now < lastFired) {
+      return;
+    }
+    lastFired = this.time.now + 500;
+    let bullet = bullets.create(player.x, player.y, 'bullet');
+    bullet.setCollideWorldBounds(false);
+    bullet.setVelocityX(player.flipX ? -300 : 300);
+    bullet.body.allowGravity = false;
   }
 </script>
 </body>
