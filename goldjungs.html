@@ -9,6 +9,7 @@
     body { 
       margin: 0; 
       overflow: hidden;
+      background: #87ceeb;
     }
     canvas {
       display: block;
@@ -17,14 +18,18 @@
 </head>
 <body>
 <script>
-  // Dynamische Bildschirmgröße
-  const gameWidth = window.innerWidth;
-  const gameHeight = window.innerHeight;
+  // Fester Spielbereich
+  const gameWidth = 800;
+  const gameHeight = 450;
 
   const config = {
     type: Phaser.AUTO,
     width: gameWidth,
     height: gameHeight,
+    scale: {
+      mode: Phaser.Scale.FIT,
+      autoCenter: Phaser.Scale.CENTER_BOTH
+    },
     physics: {
       default: 'arcade',
       arcade: {
@@ -43,7 +48,7 @@
   let player, cursors, ground, enemies, bullets, lastFired = 0, lives = 3, lifeText;
 
   function preload() {
-    // Platzhalter-Grafiken; ersetze diese URLs später durch eigene Assets
+    // Platzhalter-Grafiken (ersetze diese URLs durch deine Assets)
     this.load.image('ground', 'https://labs.phaser.io/assets/sprites/platform.png');
     this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-dude.png');
     this.load.image('enemy', 'https://labs.phaser.io/assets/sprites/space-baddie.png');
@@ -51,14 +56,13 @@
   }
 
   function create() {
-    // Erstelle den Boden als statische Plattform (grüne Wiese)
+    // Boden als statische Plattform, relativ zum Spielbereich (unten)
     ground = this.physics.add.staticGroup();
-    // Positioniere den Boden in der Mitte der Breite und bei 95% der Höhe
     ground.create(gameWidth / 2, gameHeight * 0.95, 'ground')
           .setScale(1) // Keine Skalierung, damit Kollisionen stimmen
           .refreshBody();
 
-    // Erstelle den Spieler relativ positioniert (z.B. 10% von links, 67% von oben)
+    // Spieler an relativer Position (10% von links, ca. 67% von oben)
     player = this.physics.add.sprite(gameWidth * 0.1, gameHeight * 0.67, 'player');
     player.setBounce(0.1);
     player.setCollideWorldBounds(true);
@@ -74,10 +78,8 @@
     // Starte den ersten Gegner-Spawning-Timer
     spawnNextEnemy.call(this);
 
-    // Erstelle die Gruppe für Bullets
+    // Bullets-Gruppe erstellen
     bullets = this.physics.add.group();
-
-    // Kollisionen: Spieler vs. Gegner und Bullets vs. Gegner
     this.physics.add.overlap(player, enemies, hitEnemy, null, this);
     this.physics.add.overlap(bullets, enemies, bulletHitsEnemy, null, this);
 
@@ -85,12 +87,12 @@
     cursors = this.input.keyboard.createCursorKeys();
     this.input.keyboard.on('keydown-SPACE', shoot, this);
 
-    // Anzeige der Leben oben rechts (relativ positioniert)
-    lifeText = this.add.text(gameWidth * 0.98, gameHeight * 0.05, 'Leben: ' + player.lives, { font: `${Math.round(gameHeight * 0.05)}px Arial`, fill: '#000' });
+    // Anzeige der Leben oben rechts
+    lifeText = this.add.text(gameWidth * 0.98, gameHeight * 0.05, 'Leben: ' + player.lives, { font: '24px Arial', fill: '#000' });
     lifeText.setOrigin(1, 0);
 
-    // Überschrift oben in der Mitte
-    const titleText = this.add.text(gameWidth / 2, gameHeight * 0.05, 'Die Goldjungs', { font: `${Math.round(gameHeight * 0.07)}px fantasy`, fill: '#000' });
+    // Überschrift in der Mitte oben
+    const titleText = this.add.text(gameWidth / 2, gameHeight * 0.05, 'Die Goldjungs', { font: '32px fantasy', fill: '#000' });
     titleText.setOrigin(0.5, 0);
   }
 
@@ -106,12 +108,12 @@
       player.setVelocityX(0);
     }
 
-    // Sprung: Verwende body.blocked.down als Alternative zu touching.down
+    // Sprung: Nutze body.blocked.down oder body.touching.down
     if (cursors.up.isDown && (player.body.blocked.down || player.body.touching.down)) {
       player.setVelocityY(-330);
     }
 
-    // Entferne Gegner, die aus dem Bildschirm links verschwunden sind
+    // Entferne Gegner, die links aus dem Bildschirm laufen
     enemies.getChildren().forEach(enemy => {
       if (enemy.x < -50) {
         enemy.destroy();
@@ -126,9 +128,9 @@
     });
   }
 
-  // Funktion, um den nächsten Gegner mit zufälliger Verzögerung zu spawnen
+  // Nächsten Gegner mit zufälliger Verzögerung spawnen
   function spawnNextEnemy() {
-    let delay = Phaser.Math.Between(2000, 12000); // Verzögerung zwischen 2 und 12 Sekunden
+    let delay = Phaser.Math.Between(2000, 12000); // 2 bis 12 Sekunden
     console.log('Nächster Gegner in ' + delay + ' ms');
     this.time.addEvent({
       delay: delay,
@@ -138,13 +140,14 @@
     });
   }
 
-  // Gegner spawnen relativ zum Bildschirm
+  // Gegner spawnen relativ zum Spielbereich
   function spawnEnemy() {
     let groundObj = ground.getChildren()[0];
-    // Berechne die Y-Position so, dass der Gegner (mit Origin 0.5, 1) direkt auf dem Boden liegt
-    let enemyY = groundObj.y;
-    // Gegner spawnt rechts außerhalb des Bildschirms
-    let enemyX = gameWidth + 50;
+    // Berechne Y so, dass der Gegner (mit Origin 0.5, 1) direkt auf dem Boden erscheint
+    let enemyImage = this.textures.get('enemy').getSourceImage();
+    let enemyHeight = enemyImage ? enemyImage.height : 32;
+    let enemyY = groundObj.y; 
+    let enemyX = gameWidth + 50; // Spawn rechts außerhalb des Bildschirms
     let enemy = enemies.create(enemyX, enemyY, 'enemy');
     enemy.setOrigin(0.5, 1);
     enemy.setScale(1);
@@ -156,11 +159,11 @@
     spawnNextEnemy.call(this);
   }
 
-  // Wenn der Spieler von einem Gegner getroffen wird
+  // Funktion, wenn der Spieler von einem Gegner getroffen wird
   function hitEnemy(player, enemy) {
     enemy.destroy();
     player.collisionCount++;
-    // Spieler visuell verkleinern
+    // Verkleinere den Spieler als visuellen Effekt
     player.setScale(Math.max(0.5, 1 - player.collisionCount * 0.25));
     if (player.collisionCount >= 2) {
       player.lives--;
@@ -170,13 +173,13 @@
         player.setScale(1);
       } else {
         this.scene.pause();
-        const gameOverText = this.add.text(gameWidth / 2, gameHeight / 2, 'Game Over', { font: `${Math.round(gameHeight * 0.1)}px Arial`, fill: '#f00' });
+        const gameOverText = this.add.text(gameWidth / 2, gameHeight / 2, 'Game Over', { font: '48px Arial', fill: '#f00' });
         gameOverText.setOrigin(0.5);
       }
     }
   }
 
-  // Wenn ein Bullet einen Gegner trifft
+  // Funktion, wenn ein Bullet einen Gegner trifft
   function bulletHitsEnemy(bullet, enemy) {
     bullet.destroy();
     enemy.destroy();
