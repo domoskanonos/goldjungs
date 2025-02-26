@@ -47,7 +47,7 @@
   let lifeText;
 
   function preload() {
-    // Platzhalter-Grafiken; ersetze sie durch deine eigenen Assets
+    // Platzhalter-Grafiken; ersetze sie später durch deine eigenen Assets
     this.load.image('ground', 'https://labs.phaser.io/assets/sprites/platform.png');
     this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-dude.png');
     this.load.image('enemy', 'https://labs.phaser.io/assets/sprites/space-baddie.png');
@@ -144,18 +144,14 @@
 
   // Gegner spawnen direkt auf dem Boden
   function spawnEnemy() {
-    // Hole die Y-Position des Bodens
-    let groundY = ground.getChildren()[0].y;
-    // Ermittle die Höhe des Gegnerbildes
-    let enemyTexture = this.textures.get('enemy').getSourceImage();
-    let enemyHeight = enemyTexture ? enemyTexture.height : 32; // Fallback: 32 Pixel
-    // Setze den Gegner so, dass er direkt auf dem Boden steht
-    let enemyY = groundY - enemyHeight / 2;
-    let enemy = enemies.create(config.width + 50, enemyY, 'enemy');
+    let groundObj = ground.getChildren()[0];
+    // Setze den Gegner so, dass sein unterer Rand (Origin 0.5, 1) auf dem Boden liegt
+    let enemy = enemies.create(config.width + 50, groundObj.y, 'enemy');
+    enemy.setOrigin(0.5, 1);
     enemy.setVelocityX(-Phaser.Math.Between(50, 150));
     enemy.setCollideWorldBounds(false);
     enemy.setBounce(0);
-    console.log('Gegner gespawnt an x = ' + enemy.x + ', y = ' + enemyY);
+    console.log('Gegner gespawnt an x = ' + enemy.x + ', y = ' + enemy.y);
     // Starte den Timer für den nächsten Gegner
     spawnNextEnemy.call(this);
   }
