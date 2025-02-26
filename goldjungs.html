@@ -56,7 +56,7 @@
   }
 
   function create() {
-    // Boden
+    // Erstelle den Boden als statische Plattform (grüne Wiese)
     ground = this.physics.add.staticGroup();
     ground.create(400, 425, 'ground').setScale(2).refreshBody();
 
@@ -65,15 +65,16 @@
     player.setBounce(0.1);
     player.setCollideWorldBounds(true);
     player.setScale(1);
-    // Eigene Variablen: Leben und wie oft der Spieler getroffen wurde
     player.lives = lives;
     player.collisionCount = 0;
 
-    // Kollisionsabfrage mit dem Boden
+    // Kollisionsabfrage zwischen Spieler und Boden
     this.physics.add.collider(player, ground);
 
-    // Gegner-Gruppe: Gegner kommen von rechts und bewegen sich nach links
+    // Gegner-Gruppe: Gegner spawnen direkt auf dem Boden
     enemies = this.physics.add.group();
+    // Füge Kollisionsabfrage für Gegner mit dem Boden hinzu
+    this.physics.add.collider(enemies, ground);
     // Erstelle einen Timer, der alle 2 Sekunden einen neuen Gegner spawnt
     this.time.addEvent({
       delay: 2000,
@@ -87,7 +88,6 @@
 
     // Kollisionen: Spieler vs. Gegner
     this.physics.add.overlap(player, enemies, hitEnemy, null, this);
-
     // Kollisionen: Bullets vs. Gegner
     this.physics.add.overlap(bullets, enemies, bulletHitsEnemy, null, this);
 
@@ -99,7 +99,7 @@
     lifeText = this.add.text(750, 20, 'Leben: ' + player.lives, { font: '24px Arial', fill: '#000' });
     lifeText.setOrigin(1, 0);
 
-    // Überschrift oben
+    // Überschrift oben im Spiel
     const titleText = this.add.text(400, 20, 'Die Goldjungs', { font: '32px fantasy', fill: '#000' });
     titleText.setOrigin(0.5, 0);
   }
@@ -116,12 +116,9 @@
       player.setVelocityX(0);
     }
 
-    if ((cursors.up.isDown || cursors.space.isDown) && player.body.touching.down) {
+    if (cursors.up.isDown && player.body.touching.down) {
       player.setVelocityY(-330);
     }
-
-    // Schießen: (Sobald SPACE gedrückt wird, handled shoot-Funktion das Schießen)
-    // Hier werden auch Bullets bewegt, aber Arcade Physics übernimmt das in update
 
     // Entferne Gegner, die aus dem Bildschirm gelaufen sind
     enemies.getChildren().forEach(enemy => {
@@ -138,19 +135,21 @@
     });
   }
 
-  // Funktion zum Spawnen eines Gegners von rechts
+  // Gegner spawnen direkt auf dem Boden (über der grünen Wiese)
   function spawnEnemy() {
-    const enemyY = Phaser.Math.Between(300, 400); // Zufällige Höhe
+    // Setze die y-Position so, dass der Gegner auf dem Boden steht
+    let enemyY = ground.getChildren()[0].y - 20; // 20 Pixel oberhalb des Bodens
     let enemy = enemies.create(config.width + 50, enemyY, 'enemy');
     enemy.setVelocityX(-Phaser.Math.Between(50, 150));
     enemy.setCollideWorldBounds(false);
+    enemy.setBounce(0);
   }
 
   // Funktion, wenn der Spieler von einem Gegner getroffen wird
   function hitEnemy(player, enemy) {
     enemy.destroy();
     player.collisionCount++;
-    // Verkleinere den Spieler als Effekt der Kollision
+    // Verkleinere den Spieler als visuellen Effekt der Kollision
     player.setScale(Math.max(0.5, 1 - player.collisionCount * 0.25));
     if (player.collisionCount >= 2) {
       player.lives--;
@@ -174,12 +173,10 @@
     enemy.destroy();
   }
 
-  // Funktion zum Schießen
+  // Schießen-Funktion
   function shoot() {
     // Schieße nur alle 500 ms
-    if (this.time.now < lastFired) {
-      return;
-    }
+    if (this.time.now < lastFired) return;
     lastFired = this.time.now + 500;
     let bullet = bullets.create(player.x, player.y, 'bullet');
     bullet.setCollideWorldBounds(false);
