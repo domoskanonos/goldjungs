@@ -2,26 +2,29 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Die Goldjungs – Jump'n'Run mit Gegnern und Schießen</title>
+  <title>Die Goldjungs – Responsive Jump'n'Run</title>
   <!-- Phaser 3 über CDN -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
   <style>
     body {
       margin: 0;
-      background: #87ceeb;
+      overflow: hidden;
     }
     canvas {
       display: block;
-      margin: 0 auto;
     }
   </style>
 </head>
 <body>
 <script>
+  // Dynamische Bildschirmgröße
+  const gameWidth = window.innerWidth;
+  const gameHeight = window.innerHeight;
+
   const config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 450,
+    width: gameWidth,
+    height: gameHeight,
     physics: {
       default: 'arcade',
       arcade: {
@@ -47,7 +50,7 @@
   let lifeText;
 
   function preload() {
-    // Platzhalter-Grafiken; ersetze sie später durch deine eigenen Assets
+    // Lade Platzhalter-Grafiken (ersetze diese URLs durch eigene Assets)
     this.load.image('ground', 'https://labs.phaser.io/assets/sprites/platform.png');
     this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-dude.png');
     this.load.image('enemy', 'https://labs.phaser.io/assets/sprites/space-baddie.png');
@@ -55,47 +58,46 @@
   }
 
   function create() {
-    // Erstelle den Boden als statische Plattform (grüne Wiese)
+    // Erstelle den Boden als statische Plattform, relativ am unteren Rand
     ground = this.physics.add.staticGroup();
-    ground.create(400, 425, 'ground').setScale(2).refreshBody();
+    // Platziere den Boden in der Mitte der Breite und bei 95% der Höhe
+    ground.create(gameWidth / 2, gameHeight * 0.95, 'ground')
+          .setScale(2)
+          .refreshBody();
 
-    // Spieler erstellen (wie gehabt)
-    player = this.physics.add.sprite(100, 300, 'player');
+    // Spieler erstellen an relativer Position (z. B. 10% von links, 67% von oben)
+    player = this.physics.add.sprite(gameWidth * 0.1, gameHeight * 0.67, 'player');
     player.setBounce(0.1);
     player.setCollideWorldBounds(true);
     player.setScale(1);
     player.lives = lives;
     player.collisionCount = 0;
-
-    // Kollisionsabfrage zwischen Spieler und Boden
     this.physics.add.collider(player, ground);
 
-    // Gegner-Gruppe erstellen
+    // Gegner-Gruppe erstellen und Kollision mit Boden aktivieren
     enemies = this.physics.add.group();
-    // Gegner sollen mit dem Boden kollidieren, damit sie darauf bleiben
     this.physics.add.collider(enemies, ground);
 
     // Starte den ersten Gegner-Spawning-Timer
     spawnNextEnemy.call(this);
 
-    // Schüsse: Erstelle eine Gruppe für Bullets
+    // Bullets-Gruppe erstellen
     bullets = this.physics.add.group();
 
-    // Kollisionen: Spieler vs. Gegner
+    // Kollisionen zwischen Spieler und Gegner, sowie Bullets und Gegner
     this.physics.add.overlap(player, enemies, hitEnemy, null, this);
-    // Kollisionen: Bullets vs. Gegner
     this.physics.add.overlap(bullets, enemies, bulletHitsEnemy, null, this);
 
-    // Eingabe
+    // Eingabesteuerung
     cursors = this.input.keyboard.createCursorKeys();
     this.input.keyboard.on('keydown-SPACE', shoot, this);
 
-    // Anzeige der Leben oben rechts
-    lifeText = this.add.text(750, 20, 'Leben: ' + player.lives, { font: '24px Arial', fill: '#000' });
+    // Anzeige der Leben oben rechts, relativ positioniert
+    lifeText = this.add.text(gameWidth * 0.98, gameHeight * 0.05, 'Leben: ' + player.lives, { font: `${Math.round(gameHeight * 0.05)}px Arial`, fill: '#000' });
     lifeText.setOrigin(1, 0);
 
-    // Überschrift oben im Spiel
-    const titleText = this.add.text(400, 20, 'Die Goldjungs', { font: '32px fantasy', fill: '#000' });
+    // Überschrift oben in der Mitte
+    const titleText = this.add.text(gameWidth / 2, gameHeight * 0.05, 'Die Goldjungs', { font: `${Math.round(gameHeight * 0.07)}px fantasy`, fill: '#000' });
     titleText.setOrigin(0.5, 0);
   }
 
@@ -115,16 +117,16 @@
       player.setVelocityY(-330);
     }
 
-    // Entferne Gegner, die aus dem Bildschirm gelaufen sind (links)
+    // Entferne Gegner, die links aus dem Bild laufen
     enemies.getChildren().forEach(enemy => {
       if (enemy.x < -50) {
         enemy.destroy();
       }
     });
 
-    // Entferne Bullets, die den Bildschirm verlassen
+    // Entferne Bullets, die außerhalb des Bildschirms sind
     bullets.getChildren().forEach(bullet => {
-      if (bullet.x > config.width + 50 || bullet.x < -50) {
+      if (bullet.x > gameWidth + 50 || bullet.x < -50) {
         bullet.destroy();
       }
     });
@@ -132,7 +134,7 @@
 
   // Funktion, um den nächsten Gegner mit zufälliger Verzögerung zu spawnen
   function spawnNextEnemy() {
-    let delay = Phaser.Math.Between(2000, 12000); // Verzögerung zwischen 2 und 12 Sekunden
+    let delay = Phaser.Math.Between(2000, 12000); // 2 bis 12 Sekunden
     console.log('Nächster Gegner in ' + delay + ' ms');
     this.time.addEvent({
       delay: delay,
@@ -142,20 +144,22 @@
     });
   }
 
-  // Gegner spawnen direkt auf dem Boden, ähnlich wie der Spieler positioniert wird
+  // Gegner spawnen relativ zum Bildschirm
   function spawnEnemy() {
     let groundObj = ground.getChildren()[0];
-    // Berechne den y-Wert so, dass der Gegner (unterer Rand) auf dem Boden liegt
+    // Berechne die Y-Position so, dass der Gegner (mit Origin 0.5, 1) direkt auf dem Boden erscheint
     let enemyImage = this.textures.get('enemy').getSourceImage();
-    let enemyHeight = enemyImage ? enemyImage.height : 32; // Fallback: 32 Pixel
-    let enemyY = groundObj.y - enemyHeight / 2;
-    let enemy = enemies.create(config.width + 50, enemyY, 'enemy');
-    enemy.setOrigin(0.5, 0.5); // Setze den Ursprung in die Mitte, damit es ähnlich zum Spieler ist
-    enemy.setScale(1); // explizit skalieren
+    let enemyHeight = enemyImage ? enemyImage.height : 32;
+    let enemyY = groundObj.y; // Da der Boden am unteren Rand liegt
+    // Gegner soll rechts außerhalb des Bildschirms spawnen (z.B. 5% der Bildschirmbreite als Offset)
+    let enemyX = gameWidth + gameWidth * 0.05;
+    let enemy = enemies.create(enemyX, enemyY, 'enemy');
+    enemy.setOrigin(0.5, 1);
+    enemy.setScale(1);
     enemy.setVelocityX(-Phaser.Math.Between(50, 150));
     enemy.setCollideWorldBounds(false);
     enemy.setBounce(0);
-    enemy.setDepth(2); // Über dem Boden zeichnen
+    enemy.setDepth(2);
     console.log('Gegner gespawnt an x = ' + enemy.x + ', y = ' + enemy.y);
     // Starte den Timer für den nächsten Gegner
     spawnNextEnemy.call(this);
@@ -165,19 +169,17 @@
   function hitEnemy(player, enemy) {
     enemy.destroy();
     player.collisionCount++;
-    // Verkleinere den Spieler als visuellen Effekt der Kollision
+    // Visueller Effekt: Spieler wird verkleinert
     player.setScale(Math.max(0.5, 1 - player.collisionCount * 0.25));
     if (player.collisionCount >= 2) {
       player.lives--;
       lifeText.setText('Leben: ' + player.lives);
       player.collisionCount = 0;
-      // Setze Spielergröße zurück, falls noch Leben vorhanden sind
       if (player.lives > 0) {
         player.setScale(1);
       } else {
-        // Game Over
         this.scene.pause();
-        const gameOverText = this.add.text(config.width / 2, config.height / 2, 'Game Over', { font: '48px Arial', fill: '#f00' });
+        const gameOverText = this.add.text(gameWidth / 2, gameHeight / 2, 'Game Over', { font: `${Math.round(gameHeight * 0.1)}px Arial`, fill: '#f00' });
         gameOverText.setOrigin(0.5);
       }
     }
@@ -191,7 +193,6 @@
 
   // Schießen-Funktion
   function shoot() {
-    // Schieße nur alle 500 ms
     if (this.time.now < lastFired) return;
     lastFired = this.time.now + 500;
     let bullet = bullets.create(player.x, player.y, 'bullet');
