@@ -47,7 +47,7 @@
   let lifeText;
 
   function preload() {
-    // Platzhalter-Grafiken; ersetze sie später durch eigene Assets
+    // Platzhalter-Grafiken; ersetze sie durch deine eigenen Assets
     this.load.image('ground', 'https://labs.phaser.io/assets/sprites/platform.png');
     this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-dude.png');
     this.load.image('enemy', 'https://labs.phaser.io/assets/sprites/space-baddie.png');
@@ -133,6 +133,7 @@
   // Funktion, um den nächsten Gegner mit zufälliger Verzögerung zu spawnen
   function spawnNextEnemy() {
     let delay = Phaser.Math.Between(2000, 12000); // Verzögerung zwischen 2 und 12 Sekunden
+    console.log('Nächster Gegner in ' + delay + ' ms');
     this.time.addEvent({
       delay: delay,
       callback: spawnEnemy,
@@ -154,6 +155,7 @@
     enemy.setVelocityX(-Phaser.Math.Between(50, 150));
     enemy.setCollideWorldBounds(false);
     enemy.setBounce(0);
+    console.log('Gegner gespawnt an x = ' + enemy.x + ', y = ' + enemyY);
     // Starte den Timer für den nächsten Gegner
     spawnNextEnemy.call(this);
   }
