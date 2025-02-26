@@ -45,7 +45,6 @@
   let lastFired = 0;
   let lives = 3;
   let lifeText;
-  let collisionCounter = 0;
 
   function preload() {
     // Platzhalter-Grafiken; ersetze sie durch deine Assets
@@ -137,8 +136,13 @@
 
   // Gegner spawnen direkt auf dem Boden (über der grünen Wiese)
   function spawnEnemy() {
-    // Setze die y-Position so, dass der Gegner auf dem Boden steht
-    let enemyY = ground.getChildren()[0].y - 20; // 20 Pixel oberhalb des Bodens
+    // Hole die Y-Position des Bodens
+    let groundY = ground.getChildren()[0].y;
+    // Berechne die Höhe des Gegnerbildes aus der Textur
+    let enemyTexture = this.textures.get('enemy').getSourceImage();
+    let enemyHeight = enemyTexture ? enemyTexture.height : 32; // Fallback: 32 Pixel
+    // Setze den Gegner so, dass er auf dem Boden steht
+    let enemyY = groundY - enemyHeight / 2;
     let enemy = enemies.create(config.width + 50, enemyY, 'enemy');
     enemy.setVelocityX(-Phaser.Math.Between(50, 150));
     enemy.setCollideWorldBounds(false);
