@@ -47,7 +47,7 @@
   let lifeText;
 
   function preload() {
-    // Platzhalter-Grafiken; ersetze sie durch deine Assets
+    // Platzhalter-Grafiken; ersetze sie später durch eigene Assets
     this.load.image('ground', 'https://labs.phaser.io/assets/sprites/platform.png');
     this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-dude.png');
     this.load.image('enemy', 'https://labs.phaser.io/assets/sprites/space-baddie.png');
@@ -70,17 +70,13 @@
     // Kollisionsabfrage zwischen Spieler und Boden
     this.physics.add.collider(player, ground);
 
-    // Gegner-Gruppe: Gegner spawnen direkt auf dem Boden
+    // Gegner-Gruppe erstellen
     enemies = this.physics.add.group();
-    // Füge Kollisionsabfrage für Gegner mit dem Boden hinzu
+    // Gegner sollen mit dem Boden kollidieren, damit sie darauf bleiben
     this.physics.add.collider(enemies, ground);
-    // Erstelle einen Timer, der alle 2 Sekunden einen neuen Gegner spawnt
-    this.time.addEvent({
-      delay: 2000,
-      callback: spawnEnemy,
-      callbackScope: this,
-      loop: true
-    });
+
+    // Starte den ersten Gegner-Spawning-Timer
+    spawnNextEnemy.call(this);
 
     // Schüsse: Erstelle eine Gruppe für Bullets
     bullets = this.physics.add.group();
@@ -119,7 +115,7 @@
       player.setVelocityY(-330);
     }
 
-    // Entferne Gegner, die aus dem Bildschirm gelaufen sind
+    // Entferne Gegner, die aus dem Bildschirm gelaufen sind (links)
     enemies.getChildren().forEach(enemy => {
       if (enemy.x < -50) {
         enemy.destroy();
@@ -134,19 +130,32 @@
     });
   }
 
-  // Gegner spawnen direkt auf dem Boden (über der grünen Wiese)
+  // Funktion, um den nächsten Gegner mit zufälliger Verzögerung zu spawnen
+  function spawnNextEnemy() {
+    let delay = Phaser.Math.Between(2000, 12000); // Verzögerung zwischen 2 und 12 Sekunden
+    this.time.addEvent({
+      delay: delay,
+      callback: spawnEnemy,
+      callbackScope: this,
+      loop: false
+    });
+  }
+
+  // Gegner spawnen direkt auf dem Boden
   function spawnEnemy() {
     // Hole die Y-Position des Bodens
     let groundY = ground.getChildren()[0].y;
-    // Berechne die Höhe des Gegnerbildes aus der Textur
+    // Ermittle die Höhe des Gegnerbildes
     let enemyTexture = this.textures.get('enemy').getSourceImage();
     let enemyHeight = enemyTexture ? enemyTexture.height : 32; // Fallback: 32 Pixel
-    // Setze den Gegner so, dass er auf dem Boden steht
+    // Setze den Gegner so, dass er direkt auf dem Boden steht
     let enemyY = groundY - enemyHeight / 2;
     let enemy = enemies.create(config.width + 50, enemyY, 'enemy');
     enemy.setVelocityX(-Phaser.Math.Between(50, 150));
     enemy.setCollideWorldBounds(false);
     enemy.setBounce(0);
+    // Starte den Timer für den nächsten Gegner
+    spawnNextEnemy.call(this);
   }
 
   // Funktion, wenn der Spieler von einem Gegner getroffen wird
