@@ -61,10 +61,10 @@ export class Player {
         // Camera Look
         const cameraSpeed = 0.05;
         if (this.inputManager.isActionActive(GameAction.LOOK_LEFT)) {
-            this.camera.alpha -= cameraSpeed;
+            this.camera.alpha += cameraSpeed;
         }
         if (this.inputManager.isActionActive(GameAction.LOOK_RIGHT)) {
-            this.camera.alpha += cameraSpeed;
+            this.camera.alpha -= cameraSpeed;
         }
         if (this.inputManager.isActionActive(GameAction.LOOK_UP)) {
             this.camera.beta -= cameraSpeed;
