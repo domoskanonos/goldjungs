@@ -5,7 +5,11 @@ export enum GameAction {
     MOVE_BACKWARD = "MOVE_BACKWARD",
     MOVE_LEFT = "MOVE_LEFT",
     MOVE_RIGHT = "MOVE_RIGHT",
-    JUMP = "JUMP"
+    JUMP = "JUMP",
+    LOOK_UP = "LOOK_UP",
+    LOOK_DOWN = "LOOK_DOWN",
+    LOOK_LEFT = "LOOK_LEFT",
+    LOOK_RIGHT = "LOOK_RIGHT"
 }
 
 export class InputManager {
@@ -22,7 +26,11 @@ export class InputManager {
             [GameAction.MOVE_BACKWARD]: ["s", "ArrowDown"],
             [GameAction.MOVE_LEFT]: ["a", "ArrowLeft"],
             [GameAction.MOVE_RIGHT]: ["d", "ArrowRight"],
-            [GameAction.JUMP]: [" "]
+            [GameAction.JUMP]: [" "],
+            [GameAction.LOOK_UP]: ["i"],
+            [GameAction.LOOK_DOWN]: ["k"],
+            [GameAction.LOOK_LEFT]: ["j"],
+            [GameAction.LOOK_RIGHT]: ["l"]
         };
 
         this.setupInput();

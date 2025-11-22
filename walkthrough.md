@@ -23,6 +23,8 @@ This initial setup establishes the core architecture for the Goldjungs browser g
 
 ## Controls & Settings
 - **Movement**: WASD or Arrow Keys.
+- **Jump**: Spacebar.
+- **Look**: I, J, K, L (or Mouse).
 - **Settings**: Click the "⚙ Settings" button in the top right corner to rebind keys.
 - **Debugging**: Press **Shift + I** to toggle the Inspector.
 
