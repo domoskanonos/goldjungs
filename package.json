@@ -1,0 +1,30 @@
+{
+  "name": "goldjungs",
+  "version": "1.0.0",
+  "description": "In dieser Übersicht findest du eine zusammengefasste Darstellung der **Heldengruppe**, der **drei zentralen Planeten** und **zehn Fantasy-Charaktere**, die ausschließlich in der Fantasiewelt existieren. Sie alle bieten Stoff für spannende Geschichten, in denen Gut und Böse nie ganz eindeutig sind und zahlreiche Abenteuer warten.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/domoskanonos/goldjungs.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/domoskanonos/goldjungs/issues"
+  },
+  "homepage": "https://github.com/domoskanonos/goldjungs#readme",
+  "devDependencies": {
+    "@babylonjs/core": "^8.38.0",
+    "@babylonjs/inspector": "^8.38.0",
+    "@babylonjs/loaders": "^8.38.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.4"
+  }
+}
