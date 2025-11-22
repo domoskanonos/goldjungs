@@ -1,5 +1,5 @@
 import './style.css'
-import { Game } from './app'
+import { Game } from './app.ts'
 
 window.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
