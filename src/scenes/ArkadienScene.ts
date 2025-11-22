@@ -1,9 +1,16 @@
 import { Scene, Engine, Vector3, HemisphericLight, MeshBuilder, StandardMaterial, Color3 } from "@babylonjs/core";
 import { Player } from "../characters/Player";
 
+import { InputManager } from "../core/InputManager";
+import { SettingsUI } from "../ui/SettingsUI";
+
 export class ArkadienScene extends Scene {
+    public inputManager: InputManager;
+
     constructor(engine: Engine) {
         super(engine);
+        this.inputManager = new InputManager(this);
+        new SettingsUI(this.inputManager);
         
         this.createEnvironment();
         this.createPlayer();
@@ -30,6 +37,6 @@ export class ArkadienScene extends Scene {
     }
 
     private createPlayer() {
-        new Player(this);
+        new Player(this, this.inputManager);
     }
 }

@@ -1,13 +1,15 @@
-import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, ArcRotateCamera, KeyboardEventTypes } from "@babylonjs/core";
+import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, ArcRotateCamera } from "@babylonjs/core";
+import { InputManager, GameAction } from "../core/InputManager";
 
 export class Player {
     public mesh;
     private scene: Scene;
-    private inputMap: any = {};
+    private inputManager: InputManager;
     private camera: ArcRotateCamera;
 
-    constructor(scene: Scene) {
+    constructor(scene: Scene, inputManager: InputManager) {
         this.scene = scene;
+        this.inputManager = inputManager;
         
         // Create Player Mesh (Simple Capsule for now)
         this.mesh = MeshBuilder.CreateCapsule("player", {height: 2, radius: 0.5}, scene);
@@ -28,25 +30,9 @@ export class Player {
         // Lock camera target to player
         this.camera.lockedTarget = this.mesh;
 
-        // Setup Input
-        this.setupInput();
-
         // Register Update Loop
         this.scene.onBeforeRenderObservable.add(() => {
             this.update();
-        });
-    }
-
-    private setupInput() {
-        this.scene.onKeyboardObservable.add((kbInfo) => {
-            switch (kbInfo.type) {
-                case KeyboardEventTypes.KEYDOWN:
-                    this.inputMap[kbInfo.event.key] = true;
-                    break;
-                case KeyboardEventTypes.KEYUP:
-                    this.inputMap[kbInfo.event.key] = false;
-                    break;
-            }
         });
     }
 
@@ -54,16 +40,16 @@ export class Player {
         const speed = 0.1;
         const moveVector = Vector3.Zero();
 
-        if (this.inputMap["w"] || this.inputMap["W"] || this.inputMap["ArrowUp"]) {
+        if (this.inputManager.isActionActive(GameAction.MOVE_FORWARD)) {
             moveVector.z = 1;
         }
-        if (this.inputMap["s"] || this.inputMap["S"] || this.inputMap["ArrowDown"]) {
+        if (this.inputManager.isActionActive(GameAction.MOVE_BACKWARD)) {
             moveVector.z = -1;
         }
-        if (this.inputMap["a"] || this.inputMap["A"] || this.inputMap["ArrowLeft"]) {
+        if (this.inputManager.isActionActive(GameAction.MOVE_LEFT)) {
             moveVector.x = -1;
         }
-        if (this.inputMap["d"] || this.inputMap["D"] || this.inputMap["ArrowRight"]) {
+        if (this.inputManager.isActionActive(GameAction.MOVE_RIGHT)) {
             moveVector.x = 1;
         }
 
@@ -76,9 +62,6 @@ export class Player {
             // Move relative to camera view would be better, but world space for now
             // Simple world space movement:
             this.mesh.moveWithCollisions(moveVector);
-            
-            // Keep player on ground (simple gravity)
-            // this.mesh.position.y = 1; 
         }
     }
 }
