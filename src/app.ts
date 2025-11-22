@@ -1,6 +1,6 @@
 import { Engine, Scene } from "@babylonjs/core";
 import { ArkadienScene } from "./scenes/ArkadienScene";
-// import "@babylonjs/inspector"; // Uncomment to enable inspector
+import "@babylonjs/inspector";
 
 export class Game {
     private engine: Engine;
@@ -13,6 +13,18 @@ export class Game {
         // Handle window resize
         window.addEventListener("resize", () => {
             this.engine.resize();
+        });
+
+        // Inspector Toggle
+        window.addEventListener("keydown", (ev) => {
+            // Shift+I to toggle
+            if (ev.shiftKey && ev.key === 'I') {
+                if (this.scene.debugLayer.isVisible()) {
+                    this.scene.debugLayer.hide();
+                } else {
+                    this.scene.debugLayer.show();
+                }
+            }
         });
     }
 
