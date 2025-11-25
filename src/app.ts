@@ -1,5 +1,5 @@
 import { Engine, Scene } from "@babylonjs/core";
-import { ArkadienScene } from "./scenes/ArkadienScene";
+import { TowerDefenseScene } from "./scenes/TowerDefenseScene";
 import "@babylonjs/inspector";
 
 export class Game {
@@ -29,8 +29,8 @@ export class Game {
     }
 
     private createScene(): Scene {
-        // Start with Arkadien
-        return new ArkadienScene(this.engine);
+        // Create Tower Defense Scene
+        return new TowerDefenseScene(this.engine);
     }
 
     public start(): void {
